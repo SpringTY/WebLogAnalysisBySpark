@@ -1,8 +1,10 @@
 package com.spring.jobs
 
-import com.spring.Bean.VideoOrArticleTimesView
-import com.spring.Dao.VideoOrArticleTimesDao
+import com.spring.Bean.{VideoOrArticleTimesBean, VideoRegionBean}
+import com.spring.Dao.{VideoOrArticleTimesDao, VideoRegionDao}
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.functions._
 
 import scala.collection.mutable.ListBuffer
 
@@ -12,11 +14,69 @@ object AnalysisTopN {
     val spark = SparkSession.builder().appName("AnalysisTopN")
       .config("spark.sql.sources.partitionColumnTypeInference.enabled", "false")
       .getOrCreate()
+    spark.sparkContext.setLogLevel("WARN")
     val log = spark.read.parquet(args(0))
 
-    saveTopNVideoOrArticleByTimes(spark, log, "video")
-    saveTopNVideoOrArticleByTimes(spark, log, "article")
+    //saveTopNVideoOrArticleByTimes(spark, log, "video")
+    //saveTopNVideoOrArticleByTimes(spark, log, "article")
+    saveTopNVideoByRegion(spark, log, "20161110")
     spark.stop()
+  }
+
+  def saveTopNVideoByRegion(spark: SparkSession, log: DataFrame, day: String): Unit = {
+    val topVideoByTimes = getTopNVideoByRegion(spark, log, day)
+
+    topVideoByTimes.foreachPartition(partition => {
+      // 对每个分区操作
+      var list = new ListBuffer[VideoRegionBean]
+      partition.foreach(row => {
+        // 对每行操作
+        val day: String = row.getAs("day")
+        val cmsId: Long = row.getAs("cmsId")
+        val times: Long = row.getAs("times")
+        val city: String = row.getAs("city")
+        val times_rank: Long = row.getAs("times_rank").toString.toLong
+        list.append(VideoRegionBean(day, city, cmsId, times, times_rank))
+      })
+      //添加到数据库
+      VideoRegionDao.insertToVideoTimes(list)
+    })
+  }
+
+  /**
+    * 根据日期获取每个地区分类的TOP3
+    *
+    * @param spark
+    * @param log
+    * @param day
+    * @return
+    */
+  def getTopNVideoByRegion(spark: SparkSession, log: DataFrame, day: String) = {
+    import spark.implicits._
+
+    val regionInfo = log.filter($"day" === day && $"cmsType" === "video")
+      .groupBy("day", "city", "cmsId")
+      .agg(count("cmsId").as("times"))
+      .select("day", "city", "cmsID", "times")
+
+
+//    regionInfo.createOrReplaceTempView("reginInfo")
+//    spark.sql("select * from " +
+//      "(select day,city,cmsid,times," +
+//      "row_number() over (partition by city order by times desc) " +
+//      "as times_rank from reginInfo) u " +
+//      "where u.times_rank<=3")
+    val topNByRegion = regionInfo.select(
+      regionInfo("day"),
+      regionInfo("city"),
+      regionInfo("cmsId"),
+      regionInfo("times"),
+      // row_number 不分组排序
+      row_number().over(Window.partitionBy(regionInfo("city"))
+        .orderBy(regionInfo("times").desc)).as("times_rank")
+    ).filter($"times_rank" <= 3)
+
+    topNByRegion
   }
 
   /**
@@ -51,13 +111,13 @@ object AnalysisTopN {
 
     topVideoByTimes.foreachPartition(partition => {
       // 对每个分区操作
-      var list = new ListBuffer[VideoOrArticleTimesView]
+      var list = new ListBuffer[VideoOrArticleTimesBean]
       partition.foreach(row => {
         // 对每行操作
         val day: String = row.getAs("day")
         val cmsId: Long = row.getAs("cmsId")
         val times: Long = row.getAs("times")
-        list.append(VideoOrArticleTimesView(day, cmsId, times))
+        list.append(VideoOrArticleTimesBean(day, cmsId, times))
       })
       //添加到数据库
       VideoOrArticleTimesDao.insertToVideoTimes(list, cmsId)

@@ -19,9 +19,9 @@ object LogUtil {
       var cmsId = 0l
       val ip = splits(3)
       val time = splits(1)
-      val day = time.substring(0, 10).replace("-","")
+      val day = time.substring(0, 10).replace("-", "")
       val traffic = splits(2).toLong
-      var city = IpUtils.parse(ip)
+      var city = IpUtils.parse(ip).replace(" ", "")
       if (cmsInfo.length > 1) {
         cmsType = cmsInfo(0)
         // 我也记录了一下发送请求的情况 注意 ? 用 [?] split

@@ -1,5 +1,10 @@
 # 课程网站日志分析
 
+## 踩坑点(开发中持续更新)
+
+###在需求二分析时的超级大坑(已解决)
+https://github.com/SpringTY/WebLogAnalysisBySpark/issues/1
+
 ## 规划
 
 ### 需求分析
@@ -53,7 +58,7 @@ http://www.imooc.com/video/5867	2016-11-10 00:20:57	141	117.57.207.57
 
 ### 第二次清洗(提取特征)
 
-**实现类：com.spring.SecondFormat**
+**实现类：com.spring.jobs.FirstFormat**
 需求包含的所有信息隐含在第一步输出结果中，但不够明确
 因此进行特征提取
 
@@ -122,6 +127,7 @@ create table articleTimes(
 然后通过JDBC编程写入数据库
 相关类:com.spring.jobs.AnalysisTopN
 看一下最后数据库中表
+
 ```sql
 mysql> select * from videoTimes order by times desc limit 10;
 +----------+-------+-------+
@@ -149,6 +155,46 @@ mysql> select count(*) from videoTimes;
 1 row in set (0.01 sec)
 ```
 
+### 根据地区选择出受欢迎的课程
+
+需求：找出每个地区中访问次数top3
+
+**操作类:com.spring.jobs.AnalysisTopN**
+
+```sql
+create table videoRegion(
+    day varchar(8) not null,
+    city varchar(10) not null,
+    cmsid bigint(10) not null,
+    times bigint(10) not null,
+    times_rank bigint(10) not null,
+    primary key (day,city,cmsid)
+)
+```
+
+输入:第二次format后log信息
+输出:mysql数据库
+
+输出Sample:
+
+```sql
+mysql> select * from videoRegion order by city,times_rank limit 10;
++----------+-----------+-------+-------+------------+
+| day      | city      | cmsid | times | times_rank |
++----------+-----------+-------+-------+------------+
+| 20161110 | 上海市    |   323 |  2082 |          1 |
+| 20161110 | 上海市    |   324 |  2046 |          2 |
+| 20161110 | 上海市    |   180 |  1837 |          3 |
+| 20161110 | 中国      |   237 |   117 |          1 |
+| 20161110 | 中国      |  2397 |    46 |          2 |
+| 20161110 | 中国      |   239 |    22 |          3 |
+| 20161110 | 云南省    |   245 |  4282 |          1 |
+| 20161110 | 云南省    |  1246 |   993 |          2 |
+| 20161110 | 云南省    |   333 |   527 |          3 |
+| 20161110 | 全球      |   144 |  2079 |          1 |
++----------+-----------+-------+-------+------------+
+```
+
 学习点:
 
 1)控制输出文件大小 coalesce
@@ -156,3 +202,4 @@ mysql> select count(*) from videoTimes;
 2)分区字段数据类型调整，禁止dataframe自动推测
 
 3)多次添加数据段用批处理，关闭自动提交
+
