@@ -53,6 +53,7 @@ http://www.imooc.com/video/5867	2016-11-10 00:20:57	141	117.57.207.57
 
 ### 第二次清洗(提取特征)
 
+**实现类：com.spring.SecondFormat**
 需求包含的所有信息隐含在第一步输出结果中，但不够明确
 因此进行特征提取
 
@@ -60,5 +61,42 @@ http://www.imooc.com/video/5867	2016-11-10 00:20:57	141	117.57.207.57
 根据url 分类出课程或者文章
 根据url 分类出课程号或者文章号
 
+按照day分组输出
+
 输入 : url + "\t" + dateTime + "\t" + traffic + "\t" + ipAddress
-输出 : 
+输出 : parquet
+
+输出部分结果
+
+```file
+part-00101-af31c9fe-ce4d-4b59-9300-3b65f0bb0b6c.snappy.parquet
+```
+
+借助ipdatabase来确定Ip地区
+**注 : 导入github开源的Maven项目到工程**
+
+1) clone 下来
+
+```bash
+git clone github地址
+```
+
+2) clean并且打包
+
+```bash
+mvn clean package -DskipTests
+```
+
+3） 添加到本地Maven库
+
+```bash
+mvn install:install-file -Dfile=/Users/spring/Downloads/temp/ipdatabase/target/ipdatabase-1.0-SNAPSHOT.jar -DgroupId=com.ggstar -DartifactId=ipdatabase -Dversion=1.0 -Dpackaging=jar
+```
+
+4）导入原项目的Resource资源和pom.xml中依赖
+
+学习点:
+
+1) 控制输出文件大小 coalesce
+
+2）分区字段数据类型调整，禁止dataframe自动推测
