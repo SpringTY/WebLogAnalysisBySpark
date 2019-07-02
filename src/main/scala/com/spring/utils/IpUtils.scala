@@ -1,4 +1,4 @@
-package com.spring
+package com.spring.utils
 
 import com.ggstar.util.ip.IpHelper
 

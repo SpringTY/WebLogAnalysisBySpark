@@ -1,4 +1,6 @@
-package com.spring
+package com.spring.utils
+
+import com.spring.Bean.LogBean
 
 object LogUtil {
 
@@ -17,11 +19,12 @@ object LogUtil {
       var cmsId = 0l
       val ip = splits(3)
       val time = splits(1)
-      val day = time.substring(0, 10)
+      val day = time.substring(0, 10).replace("-","")
       val traffic = splits(2).toLong
       var city = IpUtils.parse(ip)
       if (cmsInfo.length > 1) {
         cmsType = cmsInfo(0)
+        // 我也记录了一下发送请求的情况 注意 ? 用 [?] split
         cmsId = cmsInfo(1).split("[?]")(0).toLong
       }
       LogBean(url, cmsType, cmsId, traffic, ip, city, time, day)
@@ -39,14 +42,3 @@ object LogUtil {
     print(s)
   }
 }
-
-case class LogBean(
-                    url: String,
-                    csmType: String,
-                    csmId: Long,
-                    traffic: Long,
-                    ip: String,
-                    city: String,
-                    time: String,
-                    day: String
-                  )

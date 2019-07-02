@@ -1,7 +1,7 @@
-package com.spring
+package com.spring.jobs
 
+import com.spring.utils.LogUtil
 import org.apache.spark.sql.{SaveMode, SparkSession}
-
 
 object SecondFormat {
   def main(args: Array[String]): Unit = {
@@ -15,7 +15,7 @@ object SecondFormat {
     // 创建 view 来操作
     logDF.createOrReplaceTempView("userInfo")
     // 仅仅保留csmType为video和article的信息
-    val newLogDF = spark.sql("select * from userInfo where csmType in ('video','article')")
+    val newLogDF = spark.sql("select * from userInfo where cmsType in ('video','article')")
 
     newLogDF.show(20)
     newLogDF.coalesce(1)
@@ -23,7 +23,6 @@ object SecondFormat {
       .partitionBy("day")
       .mode(SaveMode.Overwrite)
       .parquet(args(1))
-
     spark.stop()
   }
 }

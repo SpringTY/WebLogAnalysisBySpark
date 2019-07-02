@@ -1,4 +1,4 @@
-package com.spring
+package com.spring.utils
 
 import java.util.{Date, Locale}
 

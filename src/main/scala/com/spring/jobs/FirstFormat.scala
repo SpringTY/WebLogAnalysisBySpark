@@ -1,5 +1,6 @@
-package com.spring
+package com.spring.jobs
 
+import com.spring.utils.DateFormatUtils
 import org.apache.spark.sql.SparkSession
 
 object FirstFormat {
@@ -12,7 +13,7 @@ object FirstFormat {
     val logFormat = log.map(item => {
       val splits = item.split("\\s+")
       val ipAddress = splits(0)
-      val dateTime = DateFormatUtils.parse(splits(3) +" "+ splits(4))
+      val dateTime = DateFormatUtils.parse(splits(3) + " " + splits(4))
       val traffic = splits(9)
       val url = splits(11).replace("\"", "")
       url + "\t" + dateTime + "\t" + traffic + "\t" + ipAddress
