@@ -1,9 +1,9 @@
 package com.spring.jobs
 
-import com.spring.Bean.{VideoOrArticleTimesBean, VideoRegionBean}
-import com.spring.Dao.{VideoOrArticleTimesDao, VideoRegionDao}
+import com.spring.Bean.{VideoOrArticleTimesBean, VideoRegionBean, VideoTrafficBean}
+import com.spring.Dao.{VideoOrArticleTimesDao, VideoRegionDao, VideoTrafficDao}
 import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions._
 
 import scala.collection.mutable.ListBuffer
@@ -19,8 +19,32 @@ object AnalysisTopN {
 
     //saveTopNVideoOrArticleByTimes(spark, log, "video")
     //saveTopNVideoOrArticleByTimes(spark, log, "article")
-    saveTopNVideoByRegion(spark, log, "20161110")
+    //saveTopNVideoByRegion(spark, log, "20161110")
+    saveTopNVideoByTraffic(spark, log, "20161110")
     spark.stop()
+  }
+
+  def saveTopNVideoByTraffic(spark: SparkSession, log: DataFrame, day: String): Unit ={
+    val TopNVideoByTraffic = getTopNVideoByTraffic(spark, log, "20161110")
+    TopNVideoByTraffic.foreachPartition(
+      partition=>{
+        val list = new ListBuffer[VideoTrafficBean]
+        partition.foreach(elem=>{
+
+          val day:String = elem.getAs("day")
+          val cmsId:Long = elem.getAs("cmsId")
+          val traffics:Long = elem.getAs("traffics")
+          list.append(VideoTrafficBean(day,cmsId,traffics))
+        })
+        VideoTrafficDao.insertToVideoTraffic(list)
+      }
+    )
+  }
+  def getTopNVideoByTraffic(spark: SparkSession, log: DataFrame, day: String): Dataset[Row] = {
+    import spark.implicits._
+    log.filter($"day" === day && $"cmsType" === "video")
+      .groupBy(log("day"), log("cmsId")).agg(
+      sum("traffic").as("traffics")).orderBy($"traffics".desc)
   }
 
   def saveTopNVideoByRegion(spark: SparkSession, log: DataFrame, day: String): Unit = {
@@ -39,9 +63,10 @@ object AnalysisTopN {
         list.append(VideoRegionBean(day, city, cmsId, times, times_rank))
       })
       //添加到数据库
-      VideoRegionDao.insertToVideoTimes(list)
+      VideoRegionDao.insertToVideoRegion(list)
     })
   }
+
 
   /**
     * 根据日期获取每个地区分类的TOP3
@@ -60,12 +85,12 @@ object AnalysisTopN {
       .select("day", "city", "cmsID", "times")
 
 
-//    regionInfo.createOrReplaceTempView("reginInfo")
-//    spark.sql("select * from " +
-//      "(select day,city,cmsid,times," +
-//      "row_number() over (partition by city order by times desc) " +
-//      "as times_rank from reginInfo) u " +
-//      "where u.times_rank<=3")
+    //    regionInfo.createOrReplaceTempView("reginInfo")
+    //    spark.sql("select * from " +
+    //      "(select day,city,cmsid,times," +
+    //      "row_number() over (partition by city order by times desc) " +
+    //      "as times_rank from reginInfo) u " +
+    //      "where u.times_rank<=3")
     val topNByRegion = regionInfo.select(
       regionInfo("day"),
       regionInfo("city"),

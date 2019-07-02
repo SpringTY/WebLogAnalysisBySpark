@@ -78,6 +78,7 @@ part-00101-af31c9fe-ce4d-4b59-9300-3b65f0bb0b6c.snappy.parquet
 ```
 
 借助ipdatabase来确定Ip地区
+
 **注 : 导入github开源的Maven项目到工程**
 
 1) clone 下来
@@ -203,3 +204,39 @@ mysql> select * from videoRegion order by city,times_rank limit 10;
 
 3)多次添加数据段用批处理，关闭自动提交
 
+### 根据流量选择出受欢迎的课程
+
+**相关类:com.spring.jobs.AnalysisTopN**
+在mysql中建表
+
+```sql
+create table videoTraffic(
+    day varchar(8) not null,
+    cmsid bigint(10) not null,
+    traffics bigint(10) not null,
+    primary key (day,cmsid)
+)
+```
+
+输入:第二次format后log信息
+输出:mysql数据库
+
+输出Sample:
+```sql
+mysql> select * from videoTraffic order by traffics desc limit 10 ;
++----------+-------+-----------+
+| day      | cmsid | traffics  |
++----------+-------+-----------+
+| 20161110 |  1332 | 288715956 |
+| 20161110 |   447 | 284947425 |
+| 20161110 |  1112 | 240083210 |
+| 20161110 |   150 | 224446391 |
+| 20161110 |  1206 | 199841153 |
+| 20161110 |  1310 | 198135084 |
+| 20161110 |   577 | 193204232 |
+| 20161110 |   958 | 192223091 |
+| 20161110 |   590 | 190557642 |
+| 20161110 |   338 | 189025822 |
++----------+-------+-----------+
+10 rows in set (0.00 sec)
+```

@@ -2,28 +2,25 @@ package com.spring.Dao
 
 import java.sql.PreparedStatement
 
-import com.spring.Bean.{VideoOrArticleTimesBean, VideoRegionBean}
+import com.spring.Bean.VideoTrafficBean
 import com.spring.utils.MySQLUtils
 
 import scala.collection.mutable.ListBuffer
 
-object VideoRegionDao {
-  def insertToVideoRegion(list: ListBuffer[VideoRegionBean]): Unit = {
+object VideoTrafficDao {
+  def insertToVideoTraffic(list: ListBuffer[VideoTrafficBean]): Unit = {
     val connection = MySQLUtils.getConnection()
     var statement: PreparedStatement = null
 
     // 设置自动提交失效，为批处理效率增加
     connection.setAutoCommit(false)
     try {
-      val sql = "insert into videoRegion (day,city,cmsid,times,times_rank)values (?,?,?,?,?)"
+      val sql = "insert into videoTraffic (day,cmsid,traffics) values (?,?,?)"
       statement = connection.prepareStatement(sql)
       for (elem <- list) {
         statement.setString(1, elem.day)
-        statement.setString(2, elem.city)
-        statement.setLong(3, elem.cmsId)
-        statement.setLong(4, elem.times)
-        statement.setLong(5, elem.times_rank)
-        //加到batch中
+        statement.setLong(2, elem.cmsId)
+        statement.setLong(3, elem.traffics)
         statement.addBatch()
       }
       // 执行批处理
