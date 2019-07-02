@@ -95,8 +95,64 @@ mvn install:install-file -Dfile=/Users/spring/Downloads/temp/ipdatabase/target/i
 
 4）导入原项目的Resource资源和pom.xml中依赖
 
+## 统计分析阶段
+
+### 根据访问次数选择出受欢迎的课程
+
+在spark中，用第二次清洗好的数据用DataFrame创建一个View来用sparksql分析
+然后存入MYSQL数据库
+
+创建数据库的SQL:
+
+```sql
+create table videoTimes(
+    day varchar(8) not null,
+    cmsid bigint(10) not null,
+    times bigint(10) not null,
+    primary key (day,cmsid)
+)
+create table articleTimes(
+    day varchar(8) not null,
+    cmsid bigint(10) not null,
+    times bigint(10) not null,
+    primary key (day,cmsid)
+)
+```
+
+然后通过JDBC编程写入数据库
+相关类:com.spring.jobs.AnalysisTopN
+看一下最后数据库中表
+```sql
+mysql> select * from videoTimes order by times desc limit 10;
++----------+-------+-------+
+| day      | cmsid | times |
++----------+-------+-------+
+| 20161110 |   180 | 26065 |
+| 20161110 |  1230 | 20119 |
+| 20161110 |   141 | 19438 |
+| 20161110 |   145 | 19274 |
+| 20161110 |   669 | 18658 |
+| 20161110 |   366 | 18380 |
+| 20161110 |   981 | 18099 |
+| 20161110 |   324 | 17840 |
+| 20161110 |   133 | 16616 |
+| 20161110 |   162 | 16332 |
++----------+-------+-------+
+10 rows in set (0.01 sec)
+
+mysql> select count(*) from videoTimes;
++----------+
+| count(*) |
++----------+
+|     4160 |
++----------+
+1 row in set (0.01 sec)
+```
+
 学习点:
 
-1) 控制输出文件大小 coalesce
+1)控制输出文件大小 coalesce
 
-2）分区字段数据类型调整，禁止dataframe自动推测
+2)分区字段数据类型调整，禁止dataframe自动推测
+
+3)多次添加数据段用批处理，关闭自动提交
