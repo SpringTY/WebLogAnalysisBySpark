@@ -1,9 +1,21 @@
 # 课程网站日志分析
 
+部分结果示例
+
+![image](mdImages/1A98EF06-76E2-4648-AD8D-CC639EB7BEBB.png)
+
+![image](mdImages/5A4FB928-3A32-42E2-A114-55C36F04D589.png)
+
 ## 踩坑点(开发中持续更新)
 
-###在需求二分析时的超级大坑(已解决)
+### 在需求二分析时的超级大坑(已解决)
+
 https://github.com/SpringTY/WebLogAnalysisBySpark/issues/1
+
+### 本地模式开发完成,并且用Zeppelin可视化开发完成～
+
+zeppelin导出的note为VideoAndArticleAnalysis分析
+zeppelin浏览器界面pdf保存在zeppelin.pdf
 
 ## 规划
 
