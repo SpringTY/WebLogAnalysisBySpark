@@ -252,3 +252,11 @@ mysql> select * from videoTraffic order by traffics desc limit 10 ;
 +----------+-------+-----------+
 10 rows in set (0.00 sec)
 ```
+
+## 可视化展示
+
+借助zeppelin进行可视化分析
+
+note: [Zeppelin note文件:VideoAndArticleAnalysis.json](https://github.com/SpringTY/WebLogAnalysisBySpark/blob/master/VideoAndArticleAnalysis.json)
+
+pdf(结果展示) : [分析结果PDF](https://github.com/SpringTY/WebLogAnalysisBySpark/blob/master/zeppelin.pdf)
