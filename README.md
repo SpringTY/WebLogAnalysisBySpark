@@ -108,7 +108,7 @@ mvn install:install-file -Dfile=/Users/spring/Downloads/temp/ipdatabase/target/i
 在spark中，用第二次清洗好的数据用DataFrame创建一个View来用sparksql分析
 然后存入MYSQL数据库
 
-创建数据库的SQL:
+创建数据库的SQL:`
 
 ```sql
 create table videoTimes(
@@ -116,13 +116,13 @@ create table videoTimes(
     cmsid bigint(10) not null,
     times bigint(10) not null,
     primary key (day,cmsid)
-)
+);
 create table articleTimes(
     day varchar(8) not null,
     cmsid bigint(10) not null,
     times bigint(10) not null,
     primary key (day,cmsid)
-)
+);
 ```
 
 然后通过JDBC编程写入数据库

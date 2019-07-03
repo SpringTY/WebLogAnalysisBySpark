@@ -30,7 +30,7 @@ object LogUtil {
       LogBean(url, cmsType, cmsId, traffic, ip, city, time, day)
     } catch {
       case e: Exception => {
-        println("Error parse: " + log)
+        //println("Error parse: " + log)
         LogBean("", "", 0, 0, "", "", "", "")
       }
     }

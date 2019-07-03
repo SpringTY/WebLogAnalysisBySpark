@@ -17,29 +17,30 @@ object AnalysisTopN {
     spark.sparkContext.setLogLevel("WARN")
     val log = spark.read.parquet(args(0))
 
-    //saveTopNVideoOrArticleByTimes(spark, log, "video")
-    //saveTopNVideoOrArticleByTimes(spark, log, "article")
-    //saveTopNVideoByRegion(spark, log, "20161110")
+    saveTopNVideoOrArticleByTimes(spark, log, "video","20161110")
+    saveTopNVideoOrArticleByTimes(spark, log, "article","20161110")
+    saveTopNVideoByRegion(spark, log, "20161110")
     saveTopNVideoByTraffic(spark, log, "20161110")
     spark.stop()
   }
 
-  def saveTopNVideoByTraffic(spark: SparkSession, log: DataFrame, day: String): Unit ={
+  def saveTopNVideoByTraffic(spark: SparkSession, log: DataFrame, day: String): Unit = {
     val TopNVideoByTraffic = getTopNVideoByTraffic(spark, log, "20161110")
     TopNVideoByTraffic.foreachPartition(
-      partition=>{
+      partition => {
         val list = new ListBuffer[VideoTrafficBean]
-        partition.foreach(elem=>{
+        partition.foreach(elem => {
 
-          val day:String = elem.getAs("day")
-          val cmsId:Long = elem.getAs("cmsId")
-          val traffics:Long = elem.getAs("traffics")
-          list.append(VideoTrafficBean(day,cmsId,traffics))
+          val day: String = elem.getAs("day")
+          val cmsId: Long = elem.getAs("cmsId")
+          val traffics: Long = elem.getAs("traffics")
+          list.append(VideoTrafficBean(day, cmsId, traffics))
         })
         VideoTrafficDao.insertToVideoTraffic(list)
       }
     )
   }
+
   def getTopNVideoByTraffic(spark: SparkSession, log: DataFrame, day: String): Dataset[Row] = {
     import spark.implicits._
     log.filter($"day" === day && $"cmsType" === "video")
@@ -112,14 +113,14 @@ object AnalysisTopN {
     * @param cmsId video 或者 article
     * @return
     */
-  def getTopNByTimes(spark: SparkSession, log: DataFrame, cmsId: String): DataFrame = {
+  def getTopNByTimes(spark: SparkSession, log: DataFrame, cmsId: String, day: String): DataFrame = {
     log.createOrReplaceTempView("logInfo")
-    var sql = "select day,cmsId,count(*) as times " +
+    val sql = "select day,cmsId,count(*) as times " +
       "from logInfo " +
-      "where cmsType = '?' " +
+      s"where cmsType = '$cmsId' and day = $day " +
       "group by day,cmsId " +
       "order by times desc"
-    sql = sql.replace("?", cmsId)
+    println(sql)
     val VideoTimesDF = spark.sql(sql)
     VideoTimesDF
   }
@@ -131,8 +132,8 @@ object AnalysisTopN {
     * @param log   由 getTopNByTimes 生成的 dataFrame
     * @param cmsId video 或者 article
     */
-  def saveTopNVideoOrArticleByTimes(spark: SparkSession, log: DataFrame, cmsId: String): Unit = {
-    val topVideoByTimes = getTopNByTimes(spark, log, cmsId)
+  def saveTopNVideoOrArticleByTimes(spark: SparkSession, log: DataFrame, cmsId: String,day:String): Unit = {
+    val topVideoByTimes = getTopNByTimes(spark, log, cmsId,day)
 
     topVideoByTimes.foreachPartition(partition => {
       // 对每个分区操作
